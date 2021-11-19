@@ -1,8 +1,8 @@
 import requests
 import json
 import subprocess
-import schedule
 import time
+import paho.mqtt.client as mqtt
 
 def SendScene(sceneName):
     url = "http://192.168.1.168:8888/api/scenes"
@@ -18,7 +18,7 @@ def SendScene(sceneName):
     x = requests.put(url, data= _data)
     print(x.content)
 
-def StartShow():
+def StartShow(client, userdata, message):
     SendScene("haloweenscroll")
 
     # bashCmd = ['DISPLAY=:0.0 /usr/bin/vlc --playlist-autostart --play-and-exit --no-loop "/media/pi/PhotoBackup/Music"']
@@ -28,10 +28,31 @@ def StartShow():
     print(output)
 
     SendScene("off")
+# def StartShow(client, userdata, message):
+#     print("Workin here")
+#     print(message)
+   
 
-schedule.every().day.at("18:00").do(StartShow)
-schedule.every().day.at("19:00").do(StartShow)
-# StartShow()
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+def OnConnect(client, userdata, flags, rc):
+    if rc==0:
+        print("connected OK Returned code =",rc)
+    else:
+        print("Bad connection Returned code =",rc)
+
+broker_address="homeassistant.local"
+port = 1883
+print("creating new instance")
+client = mqtt.Client("Computer Room Pi") #create new instance
+print("connecting to broker")
+client.on_connect=OnConnect
+client.connect(broker_address, port, 30) #connect to broker
+print("Subscribing to topic","house/holidayShow")
+client.subscribe("house/holidayShow")
+client.on_message = StartShow
+print("starting mqtt loop")
+
+try:
+    client.loop_forever()
+except KeyboardInterrupt:
+    client.loop_stop()
+    client.disconnect()
