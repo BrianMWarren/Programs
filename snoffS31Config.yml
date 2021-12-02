@@ -1,15 +1,15 @@
 # Basic Config
 esphome:
-  name: outlet01
+  name: tvoutlet
   platform: ESP8266
   board: esp01_1m
 
 wifi:
-  ssid: ssid
-  password: "pw"
+  ssid: seekingConnections
+  password: ""
   ap:
-    ssid: "outlet 01"
-    password: "pw"
+    ssid: "tv outlet"
+    password: ""
 
 logger:
   baud_rate: 0 # (UART logging interferes with cse7766)
@@ -28,24 +28,43 @@ binary_sensor:
       number: GPIO0
       mode: INPUT_PULLUP
       inverted: True
-    name: "outlet 01 Button"
+    name: "tv outlet Button"
     on_press:
       - switch.toggle: relay
   - platform: status
-    name: "outlet 01 Status"
+    name: "tv outlet Status"
 
 sensor:
   - platform: wifi_signal
-    name: "outlet 01 WiFi Signal"
+    name: "tv outlet WiFi Signal"
     update_interval: 60s
   - platform: cse7766
     current:
-      name: "outlet 01 Current"
+      name: "tv outlet Current"
       accuracy_decimals: 1
     voltage:
-      name: "outlet 01 Voltage"
-      accuracy_decimals: 1# Basic Config
-esphome:
-  name: outlet01
-  platform: ESP8266
-  board: esp01_1m
+      name: "tv outlet Voltage"
+      accuracy_decimals: 1
+    power:
+      name: "tv outlet Power"
+      accuracy_decimals: 1
+      id: outlet01Power
+  - platform: total_daily_energy
+    name: "Total Daily Energy"
+    power_id: outlet01Power
+    filters:
+      - multiply: 0.001
+    unit_of_measurement: kWh
+    device_class: energy
+time:
+- platform: sntp
+  id: my_time
+
+switch:
+  - platform: gpio
+    name: "tv outlet Relay"
+    pin: GPIO12
+    id: relay
+
+status_led:
+  pin: GPIO13
